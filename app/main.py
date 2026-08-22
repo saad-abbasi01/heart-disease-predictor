@@ -5,7 +5,7 @@ import streamlit as st
 
 
 from app.models.predictor import HeartDiseasePredictor
-
+import plotly.graph_objects as go
 #set page configure
 st.set_page_config(
     page_title="Heart Disease Predictor",
@@ -64,6 +64,35 @@ if submitted:
 
     st.markdown("--❤️--")
     st.subheader("📊 Prediction Result")
-    st.metric("Risk Score", f"{risk_pct}%")
-    st.markdown(f"### {risk_level}")
+    col_a,col_b=st.columns([1,1])
     
+    with col_a:
+        fig=go.Figure(go.Indicator(
+            mode="gauge + number",
+            value=risk_pct,
+            title={"text":"Risk_Score (%)"},
+            gauge={
+                
+                'axis':{'range':[0,100]},
+                'bar':{'color':"#333333"},
+                'steps':[
+                    {'range':[0,30],'color':'#8BC34A'},
+                    {'range':[30,70],'color':'#FFC107'},
+                    {'range':[70,100],'color':'#F44336'}
+                    
+                ],
+                
+            }
+        ))
+        fig.update_layout(height=280,margin=dict(l=20,r=20,t=40,b=20))
+        st.plotly_chart(fig,use_container_width=True)
+    with col_b:
+        st.markdown(f"###{risk_level}###")
+        st.metric("Risk_percentage",f"{risk_pct:.2f}%")
+        
+        importances=predictor.model.feature_importances_
+        top_features=sorted(zip(predictor.feature_cols,importances),key=lambda x: x[1],reverse=True)[:5]
+        
+        st.markdown("**Top  5 Factor influences this model**")
+        for name ,score in  top_features:
+            st.write(f" - {name} : {score:.2%}")
