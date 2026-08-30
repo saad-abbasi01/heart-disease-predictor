@@ -1,7 +1,7 @@
 import numpy as np
 from pathlib import Path
 import joblib
-
+import shap
 class HeartDiseasePredictor:
     
     def __init__(self,model_path,scaler_path):
@@ -27,6 +27,19 @@ class HeartDiseasePredictor:
             risk_level = "🔴 HIGH RISK"
 
         return risk_percentage, risk_level
+    
+
+    def explain(self,patient_data:dict):
+        
+        features=np.array([patient_data[col] for col in self.feature_cols]).reshape(1,-1)
+        feature_scaled=self.scaler.transform(features)
+        explainer=shap.TreeExplainer(self.model)
+        shape_values=explainer.shap_values(feature_scaled)
+        
+        contributers=shape_values[0][:, 1]
+        
+        return list(zip(self.feature_cols,contributers))
+    
 if __name__ == "__main__":
     predictor=HeartDiseasePredictor(
         "app/models/train_model.pkl",

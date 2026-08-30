@@ -96,3 +96,14 @@ if submitted:
         st.markdown("**Top  5 Factor influences this model**")
         for name ,score in  top_features:
             st.write(f" - {name} : {score:.2%}")
+            
+        st.markdown("---")
+        st.subheader("Why predict this risk ratio?")
+        
+        explanation=predictor.explain(patient_data)
+        explanation_sorted=sorted(explanation,key=lambda x: abs(x[1]),reverse=True)[:5]
+        
+        for name ,value in explanation_sorted:
+            direction="Increased" if value >0 else "Decreased"
+            st.write(f"**{name}** and {direction} this patient risk by {abs(value)}:.3f")
+        
