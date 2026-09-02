@@ -59,13 +59,17 @@ if submitted:
     'thalach': thalach, 'exang': exang_val, 'oldpeak': oldpeak,
     'slope': slope, 'ca': ca, 'thal': thal
     }
-
-    risk_pct, risk_level = predictor.prepare(patient_data)
-
-    st.markdown("--❤️--")
-    st.subheader("📊 Prediction Result")
-    col_a,col_b=st.columns([1,1])
-    
+    try:
+        risk_pct, risk_level = predictor.prepare(patient_data)
+    except ValueError as e:
+        st.error(f"Error in patient data: {e}")
+    except Exception as e:
+        st.error(f"something went wrong with this :")
+        st.exception (e)
+        st.markdown("--❤️--")
+        st.subheader("📊 Prediction Result")
+        col_a,col_b=st.columns([1,1])
+        
     with col_a:
         fig=go.Figure(go.Indicator(
             mode="gauge + number",

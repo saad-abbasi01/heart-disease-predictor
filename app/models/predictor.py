@@ -5,29 +5,38 @@ import shap
 class HeartDiseasePredictor:
     
     def __init__(self,model_path,scaler_path):
-        self.model=joblib.load(model_path)
-        self.scaler=joblib.load(scaler_path)
+        try:
+            self.model=joblib.load(model_path)
+            self.scaler=joblib.load(scaler_path)
+        except FileNotFoundError as e:
+            raise FileNotFoundError(f"Model or scaler file not found",
+                                    f"Make sure you have runn the train_model.py detail :{e}")
         self.feature_cols=[
-            'age', 'sex', 'cp', 'trestbps', 'chol', 'fbs', 'restecg',
-            'thalach', 'exang', 'oldpeak', 'slope', 'ca', 'thal'
-        ]
-        
+                'age', 'sex', 'cp', 'trestbps', 'chol', 'fbs', 'restecg',
+                'thalach', 'exang', 'oldpeak', 'slope', 'ca', 'thal'
+            ]
+            
     def prepare(self,patient_data:dict):
-        features=np.array([patient_data[cols] for cols in self.feature_cols]).reshape(1,-1)
-        
-        feature_scaled=self.scaler.transform(features)
-        risk_prob=self.model.predict_proba(feature_scaled)[0][1]
-        risk_percentage=int(risk_prob * 100)
-        
-        if risk_percentage < 30:
-            risk_level = "🟢 LOW RISK"
-        elif risk_percentage < 70:
-            risk_level = "🟡 MEDIUM RISK"
-        else:
-            risk_level = "🔴 HIGH RISK"
+        try:
+            missing = [col for col in self.feature_cols if col not in patient_data]
+            if missing:
+                raise ValueError(f"Missing features: {missing}")
+            features=np.array([patient_data[cols] for cols in self.feature_cols]).reshape(1,-1)
+            
+            feature_scaled=self.scaler.transform(features)
+            risk_prob=self.model.predict_proba(feature_scaled)[0][1]
+            risk_percentage=int(risk_prob * 100)
+            
+            if risk_percentage < 30:
+                risk_level = "🟢 LOW RISK"
+            elif risk_percentage < 70:
+                risk_level = "🟡 MEDIUM RISK"
+            else:
+                risk_level = "🔴 HIGH RISK"
 
-        return risk_percentage, risk_level
-    
+            return risk_percentage, risk_level
+        except ValueError as e:
+            raise ValueError(f"Error in patient data: {e}")
 
     def explain(self,patient_data:dict):
         
@@ -50,7 +59,7 @@ if __name__ == "__main__":
         'chol': 212, 'fbs': 0, 'restecg': 1, 'thalach': 168,
         'exang': 0, 'oldpeak': 1.0, 'slope': 2, 'ca': 2, 'thal': 3
     }
-            
+          
     risk_per,risk_level=predictor.prepare(test_patient)
     print(f"Risk percentage is :{risk_per:.2f} and Risk level is:{risk_level}")
-        
+            
